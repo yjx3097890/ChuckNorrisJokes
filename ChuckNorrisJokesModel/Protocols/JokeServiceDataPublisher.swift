@@ -30,5 +30,5 @@ import Foundation
 import Combine
 
 public protocol JokeServiceDataPublisher {
-  
+    func pubisher() -> AnyPublisher<Data, URLError>
 }

@@ -29,7 +29,14 @@
 import Foundation
 import Combine
 
-public struct JokesService {
+public struct JokesService: JokeServiceDataPublisher {
+    public func pubisher() -> AnyPublisher<Data, URLError> {
+        URLSession.shared.dataTaskPublisher(for: url)
+            .map(\.data)
+            .eraseToAnyPublisher()
+    }
+    
+    
   private var url: URL {
     urlComponents.url!
   }

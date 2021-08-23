@@ -31,6 +31,7 @@ import Combine
 @testable import ChuckNorrisJokesModel
 
 struct MockJokesService: JokeServiceDataPublisher {
+    
   let data: Data
   let error: URLError?
   
@@ -38,6 +39,20 @@ struct MockJokesService: JokeServiceDataPublisher {
     self.data = data
     self.error = error
   }
+    
+    func pubisher() -> AnyPublisher<Data, URLError> {
+        let publisher = CurrentValueSubject<Data, URLError>(data)
+        
+        DispatchQueue.global().asyncAfter(deadline: .now()+0.1, execute: {
+            if let error = error {
+                publisher.send(completion: .failure(error))
+            } else {
+                publisher.send(data)
+            }
+        })
+        
+        return publisher.eraseToAnyPublisher()
+    }
   
   
 }

@@ -30,14 +30,17 @@ import UIKit
 import Combine
 import SwiftUI
 
-public final class JokesViewModel {
+public final class JokesViewModel: ObservableObject {
   public enum DecisionState {
     case disliked, undecided, liked
   }
   
   private static let decoder = JSONDecoder()
   
-  
+    @Published public var fetching: Bool = false
+    @Published public var joke: Joke = Joke.starter
+    @Published public var backgroundColor = Color("Gray")
+    @Published public var decisionState: DecisionState = .undecided
   
   private var subscriptions = Set<AnyCancellable>()
   private var jokeSubscriptions = Set<AnyCancellable>()
