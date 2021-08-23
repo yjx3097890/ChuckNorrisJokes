@@ -42,16 +42,27 @@ public final class JokesViewModel: ObservableObject {
     @Published public var backgroundColor = Color("Gray")
     @Published public var decisionState: DecisionState = .undecided
   
+    private let jokesService: JokeServiceDataPublisher
+    
   private var subscriptions = Set<AnyCancellable>()
   private var jokeSubscriptions = Set<AnyCancellable>()
   
-  public init(jokesService: JokeServiceDataPublisher? = nil,
+  public init(jokesService: JokeServiceDataPublisher = JokesService(),
               translationService: TranslationServiceDataPublisher? = nil) {
+    self.jokesService = jokesService
+    
+    $joke.map({_ in false}).assign(to: \.fetching, on: self).store(in: &jokeSubscriptions)
     
   }
   
   public func fetchJoke() {
+    fetching = true
     
+    jokesService.pubisher().retry(1)
+        .decode(type: Joke.self, decoder: Self.decoder)
+        .replaceError(with: Joke.error)
+        .receive(on: DispatchQueue.main)
+        .assign(to: \.joke, on: self).store(in: &jokeSubscriptions)
   }
   
   func fetchTranslation(for joke: Joke, to languageCode: String)
@@ -60,17 +71,28 @@ public final class JokesViewModel: ObservableObject {
   }
   
   public func updateBackgroundColorForTranslation(_ translation: Double) {
-    
+    switch translation {
+    case ...(-0.5):
+        backgroundColor = Color("Red")
+    case 0.5...:
+        backgroundColor = Color("Green")
+    default:
+        backgroundColor = Color("Gray")
+    }
   }
   
-  public func updateDecisionStateForTranslation(
-  _ translation: Double,
-  andPredictedEndLocationX x: CGFloat,
-  inBounds bounds: CGRect) {
-    
+  public func updateDecisionStateForTranslation(_ translation: Double, andPredictedEndLocationX x: CGFloat, inBounds bounds: CGRect) {
+    switch (translation, x) {
+    case (...(-0.6), ..<0):
+        decisionState = .disliked
+    case (0.6..., bounds.width...):
+        decisionState = .liked
+    default:
+        decisionState = .undecided
+    }
   }
   
   public func reset() {
-    
+    backgroundColor = Color("Gray")
   }
 }
