@@ -35,11 +35,11 @@ struct SavedJokesView: View {
       NavigationView {
         List {
           ForEach(jokes, id: \.self) { joke in
-            Text(joke)
+            Text(joke.value ?? "N/A")
               .lineLimit(nil)
           }
           .onDelete { indices in
-            
+            self.jokes.delete(at: indices, inViewContext: self.viewContext)
           }
         }
         .navigationBarTitle("Saved Jokes")
@@ -64,9 +64,11 @@ struct SavedJokesView: View {
     }
   }
   
+    @Environment(\.managedObjectContext) private var viewContext
   @State private var showTranslation = false
   
-  private var jokes = [String]()
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \JokeManagedObject.value,ascending: true)], animation: .default)
+    private var jokes: FetchedResults<JokeManagedObject>
 }
 
 struct SavedJokesView_Previews: PreviewProvider {
